@@ -32,6 +32,16 @@ app.post('/twit/search', (req, res) => {
   })
 })
 
+app.post('/twit/tweets', (req, res) => {
+  T.get('statuses/user_timeline', { screen_name: req.body.q, count: 1000}, function(err, data, response) {
+    res.send(data)
+  })
+})
+
+app.post('/guess', (req, res) => {
+  res.send(req.body)
+})
+
 app.listen(port, () => console.log('Sever is Running: OK'))
 
 module.exports = app

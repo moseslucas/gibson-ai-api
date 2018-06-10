@@ -8,11 +8,13 @@ const T = new Twit({
   access_token: '1683189583-MyNA4b2dKqMFMZCDUvjuuXDx3GZ44Fv3MHQPWjo',
   access_token_secret: 'srWb6B4NGFAIvc0L8i1Yc4rM6TW74IYjeA6FS1KV63ZPX'
 })
+const BrainJSClassifier = require('natural-brain')
 
 const app = express()
 const port = process.env.PORT || 4000
 
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '500mb'}))
+app.use(bodyParser.urlencoded({limit: '500mb', extended: true}))
 // Add headers
 app.use(function (req, res, next) {
 	res.setHeader('Access-Control-Allow-Origin', '*')
@@ -33,13 +35,35 @@ app.post('/twit/search', (req, res) => {
 })
 
 app.post('/twit/tweets', (req, res) => {
-  T.get('statuses/user_timeline', { screen_name: req.body.q, count: 1000}, function(err, data, response) {
+  T.get('statuses/user_timeline', { screen_name: req.body.q, count: 50}, function(err, data, response) {
     res.send(data)
   })
 })
 
-app.post('/guess', (req, res) => {
-  res.send(req.body)
+app.post('/twit/guess', (req, res) => {
+  const classifier = new BrainJSClassifier()
+  const twits = req.body.twits
+  const guess = req.body.guess
+  // twits.map( twit => {classifier.addDocument(twit.text, twit.username)})
+  // classifier.train()
+  // console.log('train: ', classifier.train())
+  // console.log('guessed: ', classifier.classify(guess))
+  // res.send(classifier.classify(guess))
+  // console.log(classifier.classify('tae'))
+  // twits.map( twit => {
+  //   classifier.addDocument(twit.text, twit.username)
+  // })
+  for (i = 0; i < twits.length; i++) {
+    console.log('Adding to dataset')
+    classifier.addDocument(twits[i].text, twits[i].username)
+  }
+  // classifier.addDocument(twits[0].text, twits[0].username)
+  // classifier.addDocument(twits[59].text, twits[59].username)
+
+  console.log('training')
+  classifier.train()
+
+  res.send(classifier.classify(guess))
 })
 
 app.listen(port, () => console.log('Sever is Running: OK'))
